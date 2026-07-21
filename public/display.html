@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ผลคะแนนสด - ประกวดดาว-เดือน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1220;
+    --panel: #171b30;
+    --female: #ff5c8a;
+    --male: #4da3ff;
+    --text: #f5f6fb;
+    --muted: #8a8fb3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    position: relative;
+    margin: 0;
+    background: radial-gradient(circle at top, rgba(28,34,64,0.30) 0%, rgba(15,18,32,0.55) 60%), url('./background.png') center/cover no-repeat;
+    color: var(--text);
+    font-family: "Sarabun", sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  header {
+    position: relative;
+    padding: 24px 40px 8px;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 3rem;
+    letter-spacing: 0.08em;
+    font-family: "Cinzel", "Cormorant Garamond", serif;
+    font-weight: 800;
+    line-height: 1.0;
+    position: relative;
+    background: linear-gradient(90deg, #ffeb9d 0%, #ffd76a 20%, #ff9cc8 45%, #90c7ff 70%, #f7e9a9 100%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 8px rgba(255,255,255,0.35), 0 0 18px rgba(255,133,203,0.18), 0 14px 34px rgba(0,0,0,0.25);
+    animation: shimmer 4.5s linear infinite;
+  }
+  header h1::after {
+    content: '';
+    position: absolute;
+    top: 12%;
+    left: 50%;
+    width: 120px;
+    height: 120px;
+    transform: translateX(-50%) rotate(15deg);
+    background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.05) 45%, transparent 65%);
+    filter: blur(12px);
+    opacity: 0.7;
+    pointer-events: none;
+    animation: shimmerGlow 4.5s linear infinite;
+  }
+  header .round-label {
+    margin-top: 6px;
+    font-size: 1.3rem;
+    color: var(--muted);
+  }
+  header .note {
+    margin-top: 10px;
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.95;
+  }
+  #chartWrap {
+    flex: 1;
+    padding: 10px 40px 30px;
+    position: relative;
+  }
+  canvas { max-height: 100%; }
+  .badge {
+    display: inline-block;
+    padding: 10px 24px;
+    border-radius: 999px;
+    font-weight: 700;
+    margin-left: 10px;
+    letter-spacing: 0.08em;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03));
+    box-shadow: 0 15px 38px rgba(255, 141, 209, 0.12), 0 8px 18px rgba(0,0,0,0.22);
+  }
+  .badge.female { background: linear-gradient(180deg, rgba(255,94,156,0.18), rgba(255,94,156,0.10)); color: var(--female); border: 1px solid rgba(255,92,138,0.48); }
+  .badge.male { background: rgba(77,163,255,0.15); color: var(--male); border: 1px solid var(--male); }
+  .scoreboard {
+    position: absolute;
+    top: 38px;
+    right: 40px;
+    min-width: 260px;
+    padding: 18px 22px;
+    border-radius: 24px;
+    background: rgba(23,27,48,0.94);
+    border: 1px solid rgba(255,255,255,0.16);
+    box-shadow: 0 28px 64px rgba(0,0,0,0.40), inset 0 0 0 1px rgba(255,255,255,0.06);
+    text-align: left;
+  }
+  .scoreboard .label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .scoreboard .title {
+    font-size: 1.1rem;
+    font-family: "Cinzel", "Cormorant Garamond", serif;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+    background: linear-gradient(90deg, #ffeb9d, #ffd76a 35%, #f9a8d5 65%, #a3d4ff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 10px rgba(255,255,255,0.28), 0 0 22px rgba(255,100,180,0.18);
+    animation: shimmer 5s linear infinite;
+  }
+  .scoreboard .line {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .scoreboard .line span {
+    display: inline-block;
+  }
+  .scoreboard .text-sm {
+    font-size: 0.95rem;
+    color: #d7dae8;
+    line-height: 1.4;
+  }
+  .scoreboard .score-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    color: #f5f6fb;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .scoreboard .score-icon {
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+  }
+  @keyframes shimmer {
+    0% { background-position: -150% 0%; }
+    100% { background-position: 150% 0%; }
+  }
+  @keyframes shimmerGlow {
+    0%, 100% { transform: translateX(-60%) rotate(15deg) scale(0.95); opacity: 0.55; }
+    50% { transform: translateX(60%) rotate(15deg) scale(1.05); opacity: 0.8; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Engineering Brand Ambassador 2026 </h1>
+  <div class="round-label">
+    <span id="roundBadge" class="badge female">ผู้เข้าประกวดหญิง (G)</span>
+    <div class="note">หมายเหตุ : ดอกไม้ 1 ดอก = 30 คะแนน</div>
+  </div>
+</header>
+
+<div class="scoreboard" id="scoreboard">
+  <div class="label"><span class="score-icon">🌸</span> Scoreboard</div>
+  <div class="title"><span id="scoreGender">ผู้เข้าประกวดหญิง (G)</span></div>
+  <div class="text-sm" id="scoreLatest">ยังไม่มีคะแนน</div>
+  <div class="text-sm" id="scoreTime"></div>
+</div>
+
+<div id="chartWrap">
+  <canvas id="scoreChart"></canvas>
+</div>
+
+<script>
+let chart;
+let currentRound = null;
+
+async function fetchRound() {
+  const res = await fetch('/api/round');
+  const d = await res.json();
+  return d.round;
+}
+
+async function fetchCandidates(gender) {
+  const res = await fetch(`/api/candidates?gender=${gender}`);
+  return res.json();
+}
+
+function genderForRound(round) {
+  return round === 2 ? 'male' : 'female';
+}
+
+function colorForGender(gender) {
+  return gender === 'male' ? '#4da3ff' : '#ff5c8a';
+}
+
+function updateHeader(round) {
+  const badge = document.getElementById('roundBadge');
+  const genderLabel = round === 2 ? 'ผู้เข้าประกวดชาย (M)' : 'ผู้เข้าประกวดหญิง (G)';
+  const badgeClass = round === 2 ? 'badge male' : 'badge female';
+  badge.textContent = genderLabel;
+  badge.className = badgeClass;
+  document.getElementById('scoreGender').textContent = genderLabel;
+}
+
+function updateScoreboard(latestEvent) {
+  const latestEl = document.getElementById('scoreLatest');
+  const timeEl = document.getElementById('scoreTime');
+  if (!latestEvent) {
+    latestEl.textContent = 'ยังไม่มีคะแนนล่าสุดในรอบนี้';
+    timeEl.textContent = '';
+    return;
+  }
+  latestEl.innerHTML = `ล่าสุด: <span class="score-tag"><span class="score-icon">🌸</span>${latestEvent.name}</span> ${latestEvent.action} = ${latestEvent.points} คะแนน`;
+  timeEl.textContent = `เวลา: ${latestEvent.time}`;
+}
+
+function renderTop3(sorted) {
+  const top3El = document.getElementById('top3');
+  const top3 = sorted.slice(0, 3);
+  top3El.innerHTML = top3.map((c, i) => `
+    <div class="card">
+      <div class="rank">อันดับ ${i + 1}</div>
+      <div class="id">${c.name}</div>
+      <div class="score">${c.score} คะแนน</div>
+    </div>
+  `).join('');
+}
+
+async function refresh() {
+  const round = await fetchRound();
+  const gender = genderForRound(round);
+  const candidates = await fetchCandidates(gender);
+  const sorted = [...candidates].sort((a, b) => b.score - a.score);
+
+  updateHeader(round);
+  const latestEvent = candidates
+    .flatMap((candidate) => candidate.history?.length ? [{
+      name: candidate.name,
+      action: candidate.history[candidate.history.length - 1].action,
+      points: candidate.history[candidate.history.length - 1].points,
+      time: new Date(candidate.history[candidate.history.length - 1].at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      at: candidate.history[candidate.history.length - 1].at
+    }] : [])
+    .sort((a, b) => new Date(b.at) - new Date(a.at));
+  updateScoreboard(latestEvent[0]);
+
+  const labels = candidates.map(c => c.name);
+  const scores = candidates.map(c => c.score);
+  const color = colorForGender(gender);
+
+  if (!chart || currentRound !== round) {
+    currentRound = round;
+    if (chart) chart.destroy();
+    const ctx = document.getElementById('scoreChart').getContext('2d');
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'คะแนน',
+          data: scores,
+          backgroundColor: color,
+          borderColor: 'rgba(255,255,255,0.18)',
+          borderWidth: 2,
+          borderRadius: 8,
+          maxBarThickness: 70,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        scales: {
+          x: {
+            ticks: { color: '#f5f6fb', font: { size: 22, weight: 'bold' } },
+            grid: { display: false }
+          },
+          y: {
+            beginAtZero: true,
+            suggestedMin: 0,
+            max: Math.max(...scores, 30) + 30,
+            ticks: { display: false },
+            grid: { color: 'rgba(255,255,255,0.16)', borderDash: [4, 4], lineWidth: 1.5 }
+          }
+        },
+        layout: {
+          padding: { top: 34 }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => `${ctx.parsed.y} คะแนน`
+            }
+          }
+        }
+      },
+      plugins: []
+    });
+  } else {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = scores;
+    chart.data.datasets[0].backgroundColor = color;
+    chart.options.scales.y.max = Math.max(...scores, 30) + 30;
+    chart.update({ duration: 0, lazy: false });
+  }
+}
+
+refresh();
+setInterval(refresh, 2000);
+</script>
+
+</body>
+</html>

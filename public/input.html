@@ -1,0 +1,411 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กรอกคะแนน - ประกวดดาว-เดือน</title>
+<style>
+  :root {
+    --bg: #0f1220;
+    --panel: #171b30;
+    --female: #ff5c8a;
+    --male: #4da3ff;
+    --text: #f5f6fb;
+    --muted: #8a8fb3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #0f1220;
+    color: var(--text);
+    font-family: "Segoe UI", "Sarabun", Tahoma, sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  h1 { text-align: center; margin-bottom: 4px; }
+  .sub { text-align: center; color: var(--muted); margin-bottom: 20px; }
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .tab {
+    padding: 10px 28px;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1.05rem;
+    background: var(--panel);
+    color: var(--muted);
+    user-select: none;
+  }
+  .tab.active.female { border-color: var(--female); color: var(--female); }
+  .tab.active.male { border-color: var(--male); color: var(--male); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+  .card {
+    background: var(--panel);
+    border-radius: 18px;
+    padding: 22px 18px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 18px 32px rgba(0,0,0,0.2);
+  }
+  .card .name { font-size: 1.6rem; font-weight: 800; margin-bottom: 6px; }
+  .card .score { color: #ffd76a; font-weight: 700; margin-bottom: 18px; }
+  .vote-entry {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .vote-controls {
+    display: grid;
+    grid-template-columns: 40px minmax(80px, 1fr) 40px;
+    gap: 10px;
+    justify-items: stretch;
+    align-items: center;
+  }
+  .vote-input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: #111829;
+    color: var(--text);
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .adjust-btn,
+  .vote-btn,
+  .undo-btn,
+  .history-toggle {
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+  .adjust-btn {
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+  }
+  .adjust-btn:hover { transform: scale(1.04); }
+  .vote-btn {
+    width: 100%;
+    padding: 12px 0;
+    background: var(--female);
+    color: #0f1220;
+  }
+  .vote-btn.male { background: var(--male); }
+  .vote-btn:disabled,
+  .undo-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .undo-btn {
+    width: 100%;
+    padding: 12px 0;
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+  }
+  .history-toggle {
+    width: 100%;
+    padding: 10px 0;
+    background: rgba(255,255,255,0.06);
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  .history-dots {
+    display: inline-flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+  }
+  .dot.filled {
+    background: var(--female);
+    border-color: rgba(255,92,138,0.9);
+  }
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    z-index: 1000;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-card {
+    width: min(560px, 100%);
+    background: #121827;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 20px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .modal-title { font-size: 1.1rem; font-weight: 800; }
+  .close-btn {
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .modal-body {
+    max-height: 320px;
+    overflow: auto;
+    padding-right: 4px;
+  }
+  .modal-row {
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .modal-row:last-child { border-bottom: none; }
+  .modal-row .row-time { color: var(--muted); font-size: 0.92rem; margin-bottom: 6px; display: block; }
+  .modal-row .row-score { font-weight: 700; }
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1c2140;
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 12px 24px;
+    border-radius: 10px;
+    opacity: 0;
+    transition: all 0.25s ease;
+    pointer-events: none;
+    font-weight: 600;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<h1>หน้ากรอกคะแนน</h1>
+<div class="sub">กรอกจำนวนดอกไม้ แล้วระบบจะเปลี่ยนเป็นคะแนนให้อัตโนมัติ (1 ดอก = 30 คะแนน)</div>
+
+<div class="tabs">
+  <div class="tab active female" data-gender="female" id="tabFemale">👧 ผู้หญิง (G01-G10)</div>
+  <div class="tab male" data-gender="male" id="tabMale">🧑 ผู้ชาย (M01-M12)</div>
+</div>
+
+<div class="grid" id="grid"></div>
+<div id="toast"></div>
+
+<div class="modal-overlay" id="historyModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="historyModalTitle">ประวัติ</div>
+      <button class="close-btn" id="closeHistoryModal">✕</button>
+    </div>
+    <div class="modal-body" id="historyModalBody"></div>
+  </div>
+</div>
+
+<script>
+let currentGender = 'female';
+let voting = false;
+let skipPreservePending = false;
+const pendingVotes = {};
+
+const tabFemale = document.getElementById('tabFemale');
+const tabMale = document.getElementById('tabMale');
+const grid = document.getElementById('grid');
+const toast = document.getElementById('toast');
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1200);
+}
+
+function setGender(gender) {
+  currentGender = gender;
+  tabFemale.classList.toggle('active', gender === 'female');
+  tabMale.classList.toggle('active', gender === 'male');
+  loadGrid();
+}
+
+tabFemale.addEventListener('click', () => setGender('female'));
+tabMale.addEventListener('click', () => setGender('male'));
+
+function preservePendingVotes() {
+  if (skipPreservePending) {
+    skipPreservePending = false;
+    return;
+  }
+  grid.querySelectorAll('.vote-input').forEach((input) => {
+    pendingVotes[input.dataset.id] = Number(input.value) || 0;
+  });
+}
+
+function formatHistoryDots(history) {
+  const count = Array.isArray(history) ? Math.min(history.length, 3) : 0;
+  return ['dot', 'dot', 'dot'].map((cls, index) => `<span class="${cls}${index < count ? ' filled' : ''}"></span>`).join('');
+}
+
+function formatHistoryDetails(history) {
+  if (!Array.isArray(history) || history.length === 0) {
+    return '<div class="modal-row"><span class="row-score">ไม่มีประวัติการกดคะแนน</span></div>';
+  }
+  return history.slice().reverse().map((item) => {
+    const time = item.at ? new Date(item.at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+    return `
+      <div class="modal-row">
+        <span class="row-time">${time}</span>
+        <span class="row-score">${item.action} — ยอดรวม ${item.score} คะแนน</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function openHistoryModal(candidate) {
+  const modal = document.getElementById('historyModal');
+  const title = document.getElementById('historyModalTitle');
+  const body = document.getElementById('historyModalBody');
+  if (!candidate) return;
+  title.textContent = `ประวัติ ${candidate.name}`;
+  body.innerHTML = formatHistoryDetails(candidate.history);
+  modal.classList.add('open');
+}
+
+function closeHistoryModal() {
+  document.getElementById('historyModal').classList.remove('open');
+}
+
+async function loadGrid() {
+  preservePendingVotes();
+  const res = await fetch(`/api/candidates?gender=${currentGender}`);
+  const candidates = await res.json();
+  grid.innerHTML = candidates.map(c => `
+    <div class="card">
+      <div class="name">${c.name}</div>
+      <div class="score">${c.score} คะแนน</div>
+      <div class="vote-entry">
+        <div class="vote-controls">
+          <button class="adjust-btn" data-action="decrement" data-id="${c.id}">-</button>
+          <input type="number" min="0" class="vote-input" value="${pendingVotes[c.id] ?? 0}" data-id="${c.id}" />
+          <button class="adjust-btn" data-action="increment" data-id="${c.id}">+</button>
+        </div>
+        <button class="vote-btn ${currentGender === 'male' ? 'male' : ''}" data-id="${c.id}">เพิ่มคะแนน</button>
+      </div>
+      <button class="undo-btn" data-id="${c.id}">⮪ ย้อนกลับ</button>
+      <button class="history-toggle" data-id="${c.id}">ประวัติ ${formatHistoryDots(c.history)}</button>
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('.card').forEach((card) => {
+    const candidateId = card.querySelector('.vote-btn').dataset.id;
+    const voteButton = card.querySelector('.vote-btn');
+    const undoButton = card.querySelector('.undo-btn');
+    const historyButton = card.querySelector('.history-toggle');
+    const quantityInput = card.querySelector('.vote-input');
+    const decrementBtn = card.querySelector('.adjust-btn[data-action="decrement"]');
+    const incrementBtn = card.querySelector('.adjust-btn[data-action="increment"]');
+
+    const updatePending = () => {
+      pendingVotes[candidateId] = Math.max(0, Number(quantityInput.value) || 0);
+    };
+
+    quantityInput.addEventListener('input', updatePending);
+    decrementBtn.addEventListener('click', () => {
+      quantityInput.value = Math.max(0, Number(quantityInput.value) - 1);
+      updatePending();
+    });
+    incrementBtn.addEventListener('click', () => {
+      quantityInput.value = Number(quantityInput.value) + 1;
+      updatePending();
+    });
+    voteButton.addEventListener('click', () => vote(candidateId, voteButton, quantityInput.value));
+    undoButton.addEventListener('click', () => undoVote(candidateId, undoButton));
+    historyButton.addEventListener('click', () => openHistoryModal(candidates.find((item) => item.id === candidateId)));
+  });
+}
+
+async function vote(candidateId, btn, amount) {
+  const qty = Number(amount);
+  if (!Number.isInteger(qty) || qty <= 0) {
+    showToast('กรุณากรอกจำนวนดอกไม้เป็นจำนวนเต็มบวก');
+    return;
+  }
+  if (voting) return;
+  voting = true;
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gender: currentGender, candidateId, amount: qty })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.error || 'vote failed');
+    }
+    showToast(`เพิ่ม ${qty} ดอกไม้ = ${qty * 30} คะแนนให้ ${candidateId} แล้ว`);
+    pendingVotes[candidateId] = 0;
+    skipPreservePending = true;
+    await loadGrid();
+  } catch (e) {
+    showToast('เกิดข้อผิดพลาด ลองใหม่อีกครั้ง');
+  } finally {
+    voting = false;
+  }
+}
+
+async function undoVote(candidateId, btn) {
+  if (voting) return;
+  voting = true;
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/vote/undo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gender: currentGender, candidateId })
+    });
+    if (!res.ok) throw new Error('undo failed');
+    showToast(`ยกเลิกคะแนนของ ${candidateId} แล้ว`);
+    await loadGrid();
+  } catch (e) {
+    showToast('ไม่สามารถยกเลิกได้ ลองใหม่อีกครั้ง');
+  } finally {
+    voting = false;
+  }
+}
+
+document.getElementById('closeHistoryModal').addEventListener('click', closeHistoryModal);
+document.getElementById('historyModal').addEventListener('click', (event) => {
+  if (event.target.id === 'historyModal') closeHistoryModal();
+});
+
+loadGrid();
+setInterval(loadGrid, 4000);
+</script>
+
+</body>
+</html>

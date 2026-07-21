@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - ประกวดดาว-เดือน</title>
+<style>
+  body {
+    margin: 0;
+    background: #0f1220;
+    color: #f5f6fb;
+    font-family: "Segoe UI", "Sarabun", Tahoma, sans-serif;
+    min-height: 100vh;
+    padding: 30px;
+  }
+  h1 { text-align: center; }
+  .panel {
+    max-width: 480px;
+    margin: 0 auto 24px;
+    background: #171b30;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .panel h2 { margin-top: 0; font-size: 1.1rem; color: #8a8fb3; }
+  .row { display: flex; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+  button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .btn-round1 { background: #ff5c8a; color: #0f1220; }
+  .btn-round2 { background: #4da3ff; color: #0f1220; }
+  .btn-reset { background: #e74c3c; color: white; }
+  .btn-neutral { background: #2b3160; color: #f5f6fb; }
+  input[type=password] {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: #0f1220;
+    color: white;
+    margin-bottom: 14px;
+  }
+  #status { text-align: center; color: #8a8fb3; min-height: 20px; margin-top: 10px; }
+  .current { text-align: center; margin-bottom: 14px; font-size: 1.1rem; }
+</style>
+</head>
+<body>
+
+<h1>⚙️ แผงควบคุมแอดมิน</h1>
+
+<div class="panel">
+  <h2>รหัสผ่านแอดมิน</h2>
+  <input type="password" id="adminKey" placeholder="กรอกรหัสผ่านแอดมิน">
+</div>
+
+<div class="panel">
+  <h2>สลับรอบที่แสดงบนจอสาธารณะ</h2>
+  <div class="current">รอบปัจจุบัน: <b id="currentRound">-</b></div>
+  <div class="row">
+    <button class="btn-round1" onclick="setRound(1)">รอบที่ 1 (หญิง G)</button>
+    <button class="btn-round2" onclick="setRound(2)">รอบที่ 2 (ชาย M)</button>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>รีเซ็ตคะแนน (ทำแล้วกู้คืนไม่ได้)</h2>
+  <div class="row">
+    <button class="btn-reset" onclick="resetScores('female')">รีเซ็ตหญิง (G)</button>
+    <button class="btn-reset" onclick="resetScores('male')">รีเซ็ตชาย (M)</button>
+  </div>
+  <div class="row">
+    <button class="btn-reset" onclick="resetScores('all')">รีเซ็ตทั้งหมด</button>
+  </div>
+</div>
+
+<div id="status"></div>
+
+<script>
+function getKey() {
+  return document.getElementById('adminKey').value;
+}
+
+function setStatus(msg, isError) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.style.color = isError ? '#e74c3c' : '#8a8fb3';
+}
+
+async function loadRound() {
+  const res = await fetch('/api/round');
+  const d = await res.json();
+  document.getElementById('currentRound').textContent =
+    d.round === 2 ? 'รอบที่ 2 (ชาย M)' : 'รอบที่ 1 (หญิง G)';
+}
+
+async function setRound(round) {
+  const res = await fetch('/api/round', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-key': getKey() },
+    body: JSON.stringify({ round })
+  });
+  if (res.ok) {
+    setStatus('เปลี่ยนรอบสำเร็จ');
+    loadRound();
+  } else {
+    setStatus('รหัสผ่านไม่ถูกต้อง หรือเกิดข้อผิดพลาด', true);
+  }
+}
+
+async function resetScores(gender) {
+  if (!confirm(`ยืนยันรีเซ็ตคะแนน (${gender}) — ทำแล้วกู้คืนไม่ได้`)) return;
+  const res = await fetch('/api/reset', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-key': getKey() },
+    body: JSON.stringify({ gender })
+  });
+  if (res.ok) {
+    setStatus('รีเซ็ตคะแนนสำเร็จ');
+  } else {
+    setStatus('รหัสผ่านไม่ถูกต้อง หรือเกิดข้อผิดพลาด', true);
+  }
+}
+
+loadRound();
+</script>
+
+</body>
+</html>

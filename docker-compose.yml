@@ -1,0 +1,12 @@
+services:
+  starmoon-vote:
+    build: .
+    container_name: starmoon-vote
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/server/data
+    environment:
+      - PORT=3000
+      - ADMIN_PASSWORD=changeme123
+    restart: unless-stopped
