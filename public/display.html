@@ -97,16 +97,18 @@
   .badge.female { background: linear-gradient(180deg, rgba(255,94,156,0.18), rgba(255,94,156,0.10)); color: var(--female); border: 1px solid rgba(255,92,138,0.48); }
   .badge.male { background: rgba(77,163,255,0.15); color: var(--male); border: 1px solid var(--male); }
   .scoreboard {
-    position: absolute;
-    top: 38px;
-    right: 40px;
-    min-width: 260px;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 280px;
     padding: 18px 22px;
     border-radius: 24px;
-    background: rgba(23,27,48,0.94);
-    border: 1px solid rgba(255,255,255,0.16);
-    box-shadow: 0 28px 64px rgba(0,0,0,0.40), inset 0 0 0 1px rgba(255,255,255,0.06);
+    background: rgba(23,27,48,0.98);
+    border: 2px solid rgba(255,100,180,0.35);
+    box-shadow: 0 28px 64px rgba(0,0,0,0.50), inset 0 0 0 1px rgba(255,255,255,0.06), 0 0 30px rgba(255,92,138,0.2);
     text-align: left;
+    z-index: 9999;
+    backdrop-filter: blur(15px);
   }
   .scoreboard .label {
     font-size: 0.8rem;
