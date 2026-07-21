@@ -4,7 +4,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin1234';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme123';
 const DATA_FILE = path.join(__dirname, 'data', 'scores.json');
 const FLOWER_POINTS = 30;
 
