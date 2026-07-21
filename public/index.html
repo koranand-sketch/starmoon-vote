@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบลงคะแนนดาว-เดือน</title>
+  <style>
+    :root {
+      --bg: #0f1220;
+      --panel: #171b30;
+      --accent: #ff5c8a;
+      --accent-alt: #4da3ff;
+      --text: #f5f6fb;
+      --muted: #8a8fb3;
+    }
+    
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #0f1220 0%, #1a1f35 50%, #15192e 100%);
+      color: var(--text);
+      font-family: "Segoe UI", "Sarabun", Tahoma, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+      animation: fadeInDown 0.8s ease;
+    }
+    
+    .title {
+      font-size: 3.5rem;
+      font-weight: 900;
+      margin: 0 0 8px 0;
+      background: linear-gradient(135deg, #ff5c8a 0%, #4da3ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+      color: var(--muted);
+      margin: 0;
+    }
+    
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+      animation: fadeInUp 0.8s ease 0.2s both;
+    }
+    
+    .card {
+      background: linear-gradient(135deg, rgba(23, 27, 48, 0.8) 0%, rgba(20, 25, 40, 0.6) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 0%, rgba(255, 92, 138, 0.1) 50%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-8px);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+    }
+    
+    .card:hover::before {
+      opacity: 1;
+    }
+    
+    .card.display {
+      border-top: 2px solid var(--accent-alt);
+    }
+    
+    .card.input {
+      border-top: 2px solid var(--accent);
+    }
+    
+    .card.admin {
+      border-top: 2px solid #ffd76a;
+    }
+    
+    .card-icon {
+      font-size: 3rem;
+      text-align: center;
+    }
+    
+    .card-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin: 0;
+    }
+    
+    .card-desc {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin: 0;
+      line-height: 1.5;
+      flex-grow: 1;
+    }
+    
+    .card-button {
+      padding: 12px 24px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent) 0%, rgba(255, 92, 138, 0.8) 100%);
+      color: #0f1220;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      align-self: flex-start;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .card.display .card-button {
+      background: linear-gradient(135deg, var(--accent-alt) 0%, rgba(77, 163, 255, 0.8) 100%);
+    }
+    
+    .card.admin .card-button {
+      background: linear-gradient(135deg, #ffd76a 0%, rgba(255, 215, 106, 0.8) 100%);
+    }
+    
+    .card-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+    
+    .card-button:active {
+      transform: scale(0.98);
+    }
+    
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 40px;
+      animation: fadeIn 0.8s ease 0.4s both;
+    }
+    
+    .version {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      margin-top: 12px;
+    }
+    
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .title {
+        font-size: 2.2rem;
+      }
+      
+      .subtitle {
+        font-size: 1rem;
+      }
+      
+      .cards-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1 class="title">⭐🌙 ประกวดดาว-เดือน</h1>
+    <p class="subtitle">ระบบลงคะแนนแบบเรียลไทม์</p>
+  </div>
+
+  <div class="cards-grid">
+    <!-- Display Card -->
+    <a href="display.html" class="card display">
+      <div class="card-icon">📊</div>
+      <h2 class="card-title">จอแสดงผล</h2>
+      <p class="card-desc">กราฟแท่งแบบเรียลไทม์ขึ้นโปรเจกเตอร์ให้ประชาชนชม อัปเดตทุก 2 วินาที</p>
+      <button class="card-button">เข้าดู</button>
+    </a>
+
+    <!-- Input Card -->
+    <a href="input.html" class="card input">
+      <div class="card-icon">📝</div>
+      <h2 class="card-title">หน้ากรอกคะแนน</h2>
+      <p class="card-desc">ทีมงานใช้สำหรับกรอกคะแนนในการประกวด 1 ดอก = 30 คะแนน</p>
+      <button class="card-button">กรอกคะแนน</button>
+    </a>
+
+    <!-- Admin Card -->
+    <a href="admin.html" class="card admin">
+      <div class="card-icon">⚙️</div>
+      <h2 class="card-title">หน้าแอดมิน</h2>
+      <p class="card-desc">จัดการระบบ สลับรอบการประกวด รีเซ็ตคะแนน (ต้องใส่รหัสผ่าน)</p>
+      <button class="card-button">ตั้งค่า</button>
+    </a>
+  </div>
+
+  <div class="footer">
+    <p>ระบบลงคะแนนดาว-เดือน v1.0</p>
+    <div class="version">🚀 Ready to use</div>
+  </div>
+</div>
+
+</body>
+</html>

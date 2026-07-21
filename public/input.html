@@ -203,10 +203,103 @@
     font-weight: 600;
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .password-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    z-index: 2000;
+  }
+  .password-modal-card {
+    width: min(420px, 100%);
+    background: #121827;
+    border-radius: 20px;
+    border: 2px solid rgba(255,255,255,0.12);
+    padding: 32px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  }
+  .password-modal-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .password-modal-subtitle {
+    text-align: center;
+    color: var(--muted);
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+  }
+  .password-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .password-input {
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: #111829;
+    color: var(--text);
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+  }
+  .password-input::placeholder {
+    color: var(--muted);
+  }
+  .password-btn {
+    padding: 14px 0;
+    border-radius: 14px;
+    border: none;
+    background: var(--female);
+    color: #0f1220;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+  .password-btn:hover:not(:disabled) {
+    transform: scale(1.02);
+  }
+  .password-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .password-error {
+    color: #ff6b6b;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: center;
+    min-height: 20px;
+  }
+  .content-wrapper {
+    display: none;
+  }
+  .content-wrapper.authenticated {
+    display: block;
+  }
 </style>
 </head>
 <body>
 
+<div class="password-modal-overlay" id="passwordModal">
+  <div class="password-modal-card">
+    <div class="password-modal-title">🔐 ใส่รหัสผ่าน</div>
+    <div class="password-modal-subtitle">เพื่อป้องกันการกรอกคะแนนจากผู้ที่ไม่ได้รับอนุญาต</div>
+    <div class="password-input-group">
+      <input type="password" class="password-input" id="passwordInput" placeholder="รหัสผ่าน" />
+      <div class="password-error" id="passwordError"></div>
+      <button class="password-btn" id="passwordSubmitBtn">เข้าสู่ระบบ</button>
+    </div>
+  </div>
+</div>
+
+<div class="content-wrapper" id="contentWrapper">
 <h1>หน้ากรอกคะแนน</h1>
 <div class="sub">กรอกจำนวนดอกไม้ แล้วระบบจะเปลี่ยนเป็นคะแนนให้อัตโนมัติ (1 ดอก = 30 คะแนน)</div>
 
@@ -403,9 +496,42 @@ document.getElementById('historyModal').addEventListener('click', (event) => {
   if (event.target.id === 'historyModal') closeHistoryModal();
 });
 
-loadGrid();
-setInterval(loadGrid, 4000);
+// Password protection
+const PASSWORD = '123456789';
+const passwordInput = document.getElementById('passwordInput');
+const passwordSubmitBtn = document.getElementById('passwordSubmitBtn');
+const passwordError = document.getElementById('passwordError');
+const contentWrapper = document.getElementById('contentWrapper');
+const passwordModal = document.getElementById('passwordModal');
+
+function authenticateUser() {
+  const password = passwordInput.value;
+  if (password === PASSWORD) {
+    passwordModal.style.display = 'none';
+    contentWrapper.classList.add('authenticated');
+    passwordInput.value = '';
+    passwordError.textContent = '';
+    loadGrid();
+    setInterval(loadGrid, 4000);
+  } else {
+    passwordError.textContent = '❌ รหัสผ่านไม่ถูกต้อง';
+    passwordInput.value = '';
+    passwordInput.focus();
+  }
+}
+
+passwordSubmitBtn.addEventListener('click', authenticateUser);
+passwordInput.addEventListener('keypress', (event) => {
+  if (event.key === 'Enter') {
+    authenticateUser();
+  }
+});
+
+// Focus on password input on load
+passwordInput.focus();
 </script>
+
+</div>
 
 </body>
 </html>
